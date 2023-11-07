@@ -8,7 +8,7 @@ from google.protobuf.json_format import MessageToJson
 url = "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs"
 
 # Your MTA API key
-api_key = "ZB2vmXSh4M8leJeeoYsXg5o0to2q6t3K4hd40wBB"
+api_key = "MgWR5VyDIq27Fr684nBkuaYa0ensqZmk9KNfOeFL"
 
 # Headers for the GET request
 headers = {
