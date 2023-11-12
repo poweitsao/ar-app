@@ -8,9 +8,11 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State private var isExpanded = true
+
     var body: some View {
         VStack {
-            ARViewContainer()
+            ARViewContainer(isExpanded: $isExpanded)
                 .edgesIgnoringSafeArea(.all)
         }
     }

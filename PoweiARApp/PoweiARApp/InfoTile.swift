@@ -17,9 +17,18 @@ import SwiftUI
 
 
 struct InfoTile: View {
+    @Binding var isExpanded: Bool  // Binding to control expand/collapse
+
+//    var body: some View {
+//        Text(isExpanded ? "Expanded" : "Collapsed")
+//            .foregroundColor(.white)
+//            .background(Color.blue)
+//            .padding()
+//    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            
+                        
             // Station Title
             Text("Jay St-MetroTech Station")
                 .font(.title)
@@ -30,31 +39,38 @@ struct InfoTile: View {
                 .font(.subheadline)
                 .foregroundColor(.gray)
             
-            // Spacer for some separation
-            Spacer()
-                .frame(height: 20)
-            
-            // "Upcoming" Title
-            Text("Upcoming")
-                .font(.title2)
-                .foregroundColor(.white)
-            
-            // Train Information List
-            TrainInfoView(line: "A", destination: "Ozone Park-Lefferts Blvd (Downtown)", eta: "Now")
-            TrainInfoView(line: "F", destination: "Jamaica-179 St (Uptown)", eta: "2 min")
-            TrainInfoView(line: "F", destination: "Jamaica-179 St (Uptown)", eta: "2 min")
-            TrainInfoView(line: "F", destination: "Jamaica-179 St (Uptown)", eta: "2 min")
-            TrainInfoView(line: "F", destination: "Jamaica-179 St (Uptown)", eta: "2 min")
-            TrainInfoView(line: "F", destination: "Jamaica-179 St (Uptown)", eta: "2 min")
-            TrainInfoView(line: "F", destination: "Jamaica-179 St (Uptown)", eta: "2 min")
-            TrainInfoView(line: "F", destination: "Jamaica-179 St (Uptown)", eta: "2 min")
-            // ... Add other train info views as needed
+            if isExpanded {
+                // Spacer for some separation
+                Spacer()
+                    .frame(height: 20)
+                
+                // "Upcoming" Title
+                Text("Upcoming")
+                    .font(.title2)
+                    .foregroundColor(.white)
+                
+                // Train Information List
+                TrainInfoView(line: "A", destination: "Ozone Park-Lefferts Blvd (Downtown)", eta: "Now")
+                TrainInfoView(line: "F", destination: "Jamaica-179 St (Uptown)", eta: "2 min")
+                TrainInfoView(line: "F", destination: "Jamaica-179 St (Uptown)", eta: "2 min")
+                TrainInfoView(line: "F", destination: "Jamaica-179 St (Uptown)", eta: "2 min")
+                TrainInfoView(line: "F", destination: "Jamaica-179 St (Uptown)", eta: "2 min")
+                TrainInfoView(line: "F", destination: "Jamaica-179 St (Uptown)", eta: "2 min")
+                TrainInfoView(line: "F", destination: "Jamaica-179 St (Uptown)", eta: "2 min")
+                TrainInfoView(line: "F", destination: "Jamaica-179 St (Uptown)", eta: "2 min")
+                // ... Add other train info views as needed
+            }
             
         }
+        .debugPrint("InfoTile body recalculating. isExpanded: \(isExpanded)")
         .padding(20)
         .background(Color.black.opacity(0.8))
         .cornerRadius(20)
         .frame(maxWidth: .infinity)
+        // Log when isExpanded changes
+        .onChange(of: isExpanded) { newValue in
+            print("isExpanded changed to \(newValue)")
+        }
     }
 }
 
@@ -87,8 +103,15 @@ struct TrainInfoView: View {
 
 struct InfoTile_Previews: PreviewProvider {
     static var previews: some View {
-        InfoTile()
+        InfoTile(isExpanded: .constant(false))
             .previewLayout(.sizeThatFits)
             .background(Color.blue)
+    }
+}
+
+extension View {
+    func debugPrint(_ value: Any) -> some View {
+        print(value)
+        return self
     }
 }
