@@ -40,6 +40,7 @@ struct ARViewContainer: UIViewRepresentable {
         arView.scene.rootNode.childNode(withName: "infoTileNode", recursively: false)?.removeFromParentNode()
 
         // Create and add new node
+        print("updateTileNode called!")
         let tileNode = createTileNode()
         arView.scene.rootNode.addChildNode(tileNode)
     }
@@ -72,6 +73,10 @@ struct ARViewContainer: UIViewRepresentable {
                     print("InfoTile node was tapped.")
                     DispatchQueue.main.async {
                         self.parent.isExpanded.toggle()
+                        self.parent.updateTileNode(in: gesture.view as! ARSCNView)  // Update the node directly
+
+//                        updateUIView(arView, gesture.view)
+//                        updateTileNode(arView)
 
                         print("isExpanded state is now \(self.parent.isExpanded)")
                     }

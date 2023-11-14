@@ -4,7 +4,7 @@
 //
 //  Created by Chang Peter on 11/2/23.
 //
-import SwiftUI
+
 
 //struct InfoTileUIKit: UIViewRepresentable {
 //    func makeUIView(context: Context) -> UIView {
@@ -16,16 +16,16 @@ import SwiftUI
 //}
 
 
-struct InfoTile: View {
-    @Binding var isExpanded: Bool  // Binding to control expand/collapse
-
 //    var body: some View {
 //        Text(isExpanded ? "Expanded" : "Collapsed")
 //            .foregroundColor(.white)
 //            .background(Color.blue)
 //            .padding()
 //    }
-    
+import SwiftUI
+struct InfoTile: View {
+    @Binding var isExpanded: Bool  // Binding to control expand/collapse
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
                         
