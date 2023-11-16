@@ -25,13 +25,14 @@ struct ARViewContainer: UIViewRepresentable {
         arView.addGestureRecognizer(tapGesture)
         
         // Initial node setup
-        updateTileNode(in: arView)
+//        updateTileNode(in: arView)
 
         return arView
     }
     
     func updateUIView(_ uiView: ARSCNView, context: Context) {
         // Update the tile node when isExpanded changes
+        print("updateUIView called!")
         updateTileNode(in: uiView)
     }
     
@@ -43,6 +44,12 @@ struct ARViewContainer: UIViewRepresentable {
         print("updateTileNode called!")
         let tileNode = createTileNode()
         arView.scene.rootNode.addChildNode(tileNode)
+        
+        // Calculate new height of the InfoTile
+//        let newHeight = UIView.from(swiftUIView: InfoTile(isExpanded: $isExpanded).background(Color.clear).clipped(), width: 400).frame.height / 1000.0
+
+//        let updatedTileNode = createTileNode()
+//        arView.scene.rootNode.addChildNode(updatedTileNode)
     }
     
     class Coordinator {
@@ -71,8 +78,10 @@ struct ARViewContainer: UIViewRepresentable {
                 // Check if 'infoTileNode' was tapped
                 if hitTestResults.first(where: { $0.node.name == "infoTileNode" }) != nil {
                     print("InfoTile node was tapped.")
-                    DispatchQueue.main.async {
-                        self.parent.isExpanded.toggle()
+                    self.parent.isExpanded.toggle()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05){
+                        
+//                        self.parent.updateUIView(gesture.view as! ARSCNView, context: self.parent.context)
                         self.parent.updateTileNode(in: gesture.view as! ARSCNView)  // Update the node directly
 
 //                        updateUIView(arView, gesture.view)
@@ -94,11 +103,14 @@ struct ARViewContainer: UIViewRepresentable {
     
     private func createTileNode() -> SCNNode {
         let fixedWidth: CGFloat = 400 // The width you want for your UIView
-        // Create your view with the SwiftUI view injected and a specific width.
+
         let uiView = UIView.from(swiftUIView: InfoTile(isExpanded: $isExpanded).background(Color.clear).clipped(), width: fixedWidth)
 
-        // Now the uiView has the correct size, you can create the SCNPlane
-        let plane = SCNPlane(width: fixedWidth / 1000.0, height: uiView.frame.height / 1000.0) // Convert points to meters
+        // Use the passed height if available, otherwise calculate as before
+        let tileHeight = uiView.frame.height / 1000.0 // Convert points to meters
+        print("tileHeight:", tileHeight)
+
+        let plane = SCNPlane(width: fixedWidth / 1000.0, height: tileHeight)
         plane.firstMaterial?.diffuse.contents = uiView
         plane.firstMaterial?.isDoubleSided = true
         plane.cornerRadius = 0.05
