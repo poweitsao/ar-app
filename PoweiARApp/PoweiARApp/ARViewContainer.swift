@@ -23,9 +23,6 @@ struct ARViewContainer: UIViewRepresentable {
         // Add tap gesture recognizer
         let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap))
         arView.addGestureRecognizer(tapGesture)
-        
-        // Initial node setup
-//        updateTileNode(in: arView)
 
         return arView
     }
@@ -45,11 +42,6 @@ struct ARViewContainer: UIViewRepresentable {
         let tileNode = createTileNode()
         arView.scene.rootNode.addChildNode(tileNode)
         
-        // Calculate new height of the InfoTile
-//        let newHeight = UIView.from(swiftUIView: InfoTile(isExpanded: $isExpanded).background(Color.clear).clipped(), width: 400).frame.height / 1000.0
-
-//        let updatedTileNode = createTileNode()
-//        arView.scene.rootNode.addChildNode(updatedTileNode)
     }
     
     class Coordinator {
@@ -79,14 +71,8 @@ struct ARViewContainer: UIViewRepresentable {
                 if hitTestResults.first(where: { $0.node.name == "infoTileNode" }) != nil {
                     print("InfoTile node was tapped.")
                     self.parent.isExpanded.toggle()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05){
-                        
-//                        self.parent.updateUIView(gesture.view as! ARSCNView, context: self.parent.context)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.01){
                         self.parent.updateTileNode(in: gesture.view as! ARSCNView)  // Update the node directly
-
-//                        updateUIView(arView, gesture.view)
-//                        updateTileNode(arView)
-
                         print("isExpanded state is now \(self.parent.isExpanded)")
                     }
                 } else {
