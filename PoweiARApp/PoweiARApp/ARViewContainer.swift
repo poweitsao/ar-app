@@ -8,8 +8,16 @@
 import SwiftUI
 import ARKit
 
+class ExpandState: ObservableObject {
+    @Published var isExpanded: Bool = false
+}
+
 struct ARViewContainer: UIViewRepresentable {
-    @Binding var isExpanded: Bool  // Binding to control expand/collapse from outside
+    
+    @ObservedObject var expandState: ExpandState
+
+    
+//    @Binding var isExpanded: Bool  // Binding to control expand/collapse from outside
 
     func makeUIView(context: Context) -> ARSCNView {
         let arView = ARSCNView()
@@ -70,10 +78,10 @@ struct ARViewContainer: UIViewRepresentable {
                 // Check if 'infoTileNode' was tapped
                 if hitTestResults.first(where: { $0.node.name == "infoTileNode" }) != nil {
                     print("InfoTile node was tapped.")
-                    self.parent.isExpanded.toggle()
+//                    self.parent.isExpanded.toggle()
+                    self.parent.expandState.isExpanded.toggle()
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.01){
-                        self.parent.updateTileNode(in: gesture.view as! ARSCNView)  // Update the node directly
-                        print("isExpanded state is now \(self.parent.isExpanded)")
+                        print("isExpanded state is now \(self.parent.expandState.isExpanded)")
                     }
                 } else {
                     print("InfoTile node was NOT tapped.")
@@ -88,16 +96,39 @@ struct ARViewContainer: UIViewRepresentable {
     }
     
     private func createTileNode() -> SCNNode {
-        let fixedWidth: CGFloat = 400 // The width you want for your UIView
+        let fixedWidth: CGFloat = 1000 // The width you want for your UIView
 
-        let uiView = UIView.from(swiftUIView: InfoTile(isExpanded: $isExpanded).background(Color.clear).clipped(), width: fixedWidth)
+
+//        let uiView = UIView.from(swiftUIView: InfoTile(isExpanded: expandState.isExpanded).background(Color.clear).clipped(), width: fixedWidth)
+        let uiViewOne = UIView.from(swiftUIView: StationLabel().background(Color.clear).clipped(), width: fixedWidth)
 
         // Use the passed height if available, otherwise calculate as before
-        let tileHeight = uiView.frame.height / 1000.0 // Convert points to meters
+        let tileHeight = uiViewOne.frame.height // Convert points to meters
         print("tileHeight:", tileHeight)
+        
+        let uiViewTwo = UIView.from(swiftUIView: StationLabel().background(Color.clear).clipped(), height: tileHeight)
+        
+        let tileWidth = uiViewTwo.frame.width // Convert points to meters
+        print("tileWidth:", tileWidth)
+        
+        
+        let uiView = UIView.from(swiftUIView: StationLabel().background(Color.clear).clipped(), width: tileWidth, height: tileHeight)
 
-        let plane = SCNPlane(width: fixedWidth / 1000.0, height: tileHeight)
-        plane.firstMaterial?.diffuse.contents = uiView
+        let plane = SCNPlane(width: tileWidth / 1000.0, height: tileHeight / 1000.0)
+        
+        let material = SCNMaterial()
+        material.diffuse.contents = uiViewTwo // Your UIView with the StationLabel
+        material.isDoubleSided = true
+
+        // Set the transparency mode to .rgbZero so that only the alpha channel controls the transparency.
+//        material.transparencyMode = .rgbZero
+
+        // Setting the blending mode might also help in certain cases.
+//        material.blendMode = .alpha
+
+//        plane.materials = [material]
+        
+        plane.firstMaterial?.diffuse.contents = uiViewTwo
         plane.firstMaterial?.isDoubleSided = true
         plane.cornerRadius = 0.05
 
@@ -125,6 +156,38 @@ extension UIView {
             withHorizontalFittingPriority: .required,
             verticalFittingPriority: .fittingSizeLevel)
         hostingController.view.frame = CGRect(x: 0, y: 0, width: width, height: size.height)
+        return hostingController.view
+    }
+    
+    static func from<T: View>(swiftUIView: T, height: CGFloat) -> UIView {
+        let hostingController = UIHostingController(rootView: swiftUIView)
+        // Set the view's frame with the desired width and a high height to allow the content to define its height.
+        hostingController.view.frame = CGRect(x: 0, y: 0, width: CGFloat.greatestFiniteMagnitude, height: height)
+        hostingController.view.backgroundColor = .clear
+        hostingController.view.sizeToFit()
+
+        // Lay out the view and get the actual height it needs.
+        let size = hostingController.view.systemLayoutSizeFitting(
+            CGSize(width: UIView.layoutFittingCompressedSize.width, height: height),
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .fittingSizeLevel)
+        hostingController.view.frame = CGRect(x: 0, y: 0, width: size.width, height: height)
+        return hostingController.view
+    }
+    
+    static func from<T: View>(swiftUIView: T, width: CGFloat, height: CGFloat) -> UIView {
+        let hostingController = UIHostingController(rootView: swiftUIView)
+        // Set the view's frame with the desired width and a high height to allow the content to define its height.
+        hostingController.view.frame = CGRect(x: 0, y: 0, width: width, height: height)
+        hostingController.view.backgroundColor = .clear
+        hostingController.view.sizeToFit()
+
+        // Lay out the view and get the actual height it needs.
+        let size = hostingController.view.systemLayoutSizeFitting(
+            CGSize(width: width, height: height),
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .fittingSizeLevel)
+        hostingController.view.frame = CGRect(x: 0, y: 0, width: width, height: height)
         return hostingController.view
     }
 }

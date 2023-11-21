@@ -24,7 +24,7 @@
 //    }
 import SwiftUI
 struct InfoTile: View {
-    @Binding var isExpanded: Bool  // Binding to control expand/collapse
+    var isExpanded: Bool  // Binding to control expand/collapse
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -103,7 +103,7 @@ struct TrainInfoView: View {
 
 struct InfoTile_Previews: PreviewProvider {
     static var previews: some View {
-        InfoTile(isExpanded: .constant(false))
+        InfoTile(isExpanded: false)
             .previewLayout(.sizeThatFits)
             .background(Color.blue)
     }
