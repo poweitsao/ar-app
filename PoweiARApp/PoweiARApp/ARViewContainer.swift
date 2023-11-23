@@ -112,21 +112,11 @@ struct ARViewContainer: UIViewRepresentable {
         print("tileWidth:", tileWidth)
         
         
-        let uiView = UIView.from(swiftUIView: StationLabel().background(Color.clear).clipped(), width: tileWidth, height: tileHeight)
-
         let plane = SCNPlane(width: tileWidth / 1000.0, height: tileHeight / 1000.0)
         
         let material = SCNMaterial()
         material.diffuse.contents = uiViewTwo // Your UIView with the StationLabel
         material.isDoubleSided = true
-
-        // Set the transparency mode to .rgbZero so that only the alpha channel controls the transparency.
-//        material.transparencyMode = .rgbZero
-
-        // Setting the blending mode might also help in certain cases.
-//        material.blendMode = .alpha
-
-//        plane.materials = [material]
         
         plane.firstMaterial?.diffuse.contents = uiViewTwo
         plane.firstMaterial?.isDoubleSided = true

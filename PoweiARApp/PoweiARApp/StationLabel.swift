@@ -22,7 +22,7 @@ struct StationLabel: View {
                 Text(labelText)
                     .foregroundColor(labelColor)
                     .padding(.leading, 20)
-                    .frame(width: 130)
+                    .frame(width: 130) // gotta manually toggle this to make it fit (no idea why)
                 
                 Spacer() // Spacer to push the label and circle to opposite sides
                 
@@ -41,7 +41,6 @@ struct StationLabel: View {
             .padding(10)
             .background(Color(red: 217/255, green: 217/255, blue: 217/255))
             .cornerRadius(40)
-//            .padding(.vertical, 20) // Padding to ensure vertical alignment is centered
         }
     }
 }
