@@ -9,6 +9,7 @@ import SwiftUI
 
 struct StationLabel: View {
     // Variables to allow for customization
+    let id: String
     @State var labelText: String = "Downtown"
     @State var circleColor: Color = Color(red: 20/255, green: 81/255, blue: 179/255)
     @State var labelColor: Color = .black
@@ -48,7 +49,7 @@ struct StationLabel: View {
 // Preview provider for SwiftUI canvas
 struct StationLabel_Previews: PreviewProvider {
     static var previews: some View {
-        StationLabel()
+        StationLabel(id: "1")
             .background(Color.black) // Set the background of the StationLabel to black
             .previewLayout(.sizeThatFits) // This makes sure the preview is just big enough to fit the content
             .edgesIgnoringSafeArea(.all) // This will extend the black background to the edges of the preview

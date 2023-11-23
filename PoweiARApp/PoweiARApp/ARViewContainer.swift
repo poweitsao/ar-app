@@ -9,7 +9,11 @@ import SwiftUI
 import ARKit
 
 class ExpandState: ObservableObject {
-    @Published var isExpanded: Bool = false
+    @Published var expandedStates: [String: Bool] = [:]
+
+    func toggleExpandState(for id: String) {
+        expandedStates[id] = !(expandedStates[id] ?? false)
+    }
 }
 
 struct ARViewContainer: UIViewRepresentable {
@@ -23,7 +27,9 @@ struct ARViewContainer: UIViewRepresentable {
         let arView = ARSCNView()
         
         let scene = SCNScene()
-        scene.rootNode.addChildNode(createTileNode())
+        scene.rootNode.addChildNode(createTileNode(id: "1"))
+        scene.rootNode.addChildNode(createTileNode(id: "2"))
+        scene.rootNode.addChildNode(createTileNode(id: "3"))
 
         arView.scene = scene
         arView.session.run(ARWorldTrackingConfiguration())
@@ -36,20 +42,22 @@ struct ARViewContainer: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: ARSCNView, context: Context) {
-        // Update the tile node when isExpanded changes
+        // Update the view with all station labels
         print("updateUIView called!")
-        updateTileNode(in: uiView)
+        for id in expandState.expandedStates.keys {
+            updateTileNode(for: id, in: uiView)
+        }
     }
     
-    private func updateTileNode(in arView: ARSCNView) {
+    private func updateTileNode(for id: String, in arView: ARSCNView) {
         // Remove existing node if it exists
-        arView.scene.rootNode.childNode(withName: "infoTileNode", recursively: false)?.removeFromParentNode()
+        arView.scene.rootNode.childNode(withName: "infoTileNode-\(id)", recursively: false)?.removeFromParentNode()
 
-        // Create and add new node
-        print("updateTileNode called!")
-        let tileNode = createTileNode()
-        arView.scene.rootNode.addChildNode(tileNode)
-        
+        // Create and add new node for each StationLabel
+        if let isExpanded = expandState.expandedStates[id], isExpanded {
+            let tileNode = createTileNode(id: id)
+            arView.scene.rootNode.addChildNode(tileNode)
+        }
     }
     
     class Coordinator {
@@ -74,18 +82,16 @@ struct ARViewContainer: UIViewRepresentable {
                         print("Hit node with no name")
                     }
                 }
-
-                // Check if 'infoTileNode' was tapped
-                if hitTestResults.first(where: { $0.node.name == "infoTileNode" }) != nil {
-                    print("InfoTile node was tapped.")
-//                    self.parent.isExpanded.toggle()
-                    self.parent.expandState.isExpanded.toggle()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.01){
-                        print("isExpanded state is now \(self.parent.expandState.isExpanded)")
+                
+                // Determine which StationLabel was tapped
+                for result in hitTestResults {
+                    if let nodeName = result.node.name, nodeName.starts(with: "infoTileNode-") {
+                        let id = String(nodeName.dropFirst("infoTileNode-".count))
+                        parent.expandState.toggleExpandState(for: id)
+                        return
                     }
-                } else {
-                    print("InfoTile node was NOT tapped.")
                 }
+                
             }
         }
 
@@ -95,18 +101,18 @@ struct ARViewContainer: UIViewRepresentable {
         Coordinator(self)
     }
     
-    private func createTileNode() -> SCNNode {
+    private func createTileNode(id: String) -> SCNNode {
         let fixedWidth: CGFloat = 1000 // The width you want for your UIView
 
 
 //        let uiView = UIView.from(swiftUIView: InfoTile(isExpanded: expandState.isExpanded).background(Color.clear).clipped(), width: fixedWidth)
-        let uiViewOne = UIView.from(swiftUIView: StationLabel().background(Color.clear).clipped(), width: fixedWidth)
+        let uiViewOne = UIView.from(swiftUIView: StationLabel(id: id).background(Color.clear).clipped(), width: fixedWidth)
 
         // Use the passed height if available, otherwise calculate as before
         let tileHeight = uiViewOne.frame.height // Convert points to meters
         print("tileHeight:", tileHeight)
         
-        let uiViewTwo = UIView.from(swiftUIView: StationLabel().background(Color.clear).clipped(), height: tileHeight)
+        let uiViewTwo = UIView.from(swiftUIView: StationLabel(id: id).background(Color.clear).clipped(), height: tileHeight)
         
         let tileWidth = uiViewTwo.frame.width // Convert points to meters
         print("tileWidth:", tileWidth)
@@ -122,11 +128,19 @@ struct ARViewContainer: UIViewRepresentable {
         plane.firstMaterial?.isDoubleSided = true
         plane.cornerRadius = 0.05
 
-        let planeNode = SCNNode(geometry: plane)
-        planeNode.name = "infoTileNode"
-        planeNode.position = SCNVector3(x: 0, y: 0, z: -1) // Position the node in front of the camera
+        let horizontalDistance: Float = 0.5 // meters
+        
+        let floatId = Float(id) ?? 0.0
+        let positionX = floatId * horizontalDistance
+        
+        let tileNode = SCNNode(geometry: plane)
+        tileNode.name = "infoTileNode-\(id)" // Unique name for each tile node
+        tileNode.position = SCNVector3(x: positionX, y: 0, z: -1)
+//        let planeNode = SCNNode(geometry: plane)
+//        planeNode.name = "infoTileNode"
+//        planeNode.position = SCNVector3(x: 0, y: 0, z: -1) // Position the node in front of the camera
 
-        return planeNode
+        return tileNode
     }
 
 
