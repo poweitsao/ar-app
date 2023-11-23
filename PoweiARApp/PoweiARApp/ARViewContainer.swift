@@ -65,6 +65,7 @@ struct ARViewContainer: UIViewRepresentable {
     
     class Coordinator: NSObject, ARSCNViewDelegate{
         var parent: ARViewContainer
+        private var lastCameraPosition = SIMD3<Float>(0, 0, 0)
 
         init(_ parent: ARViewContainer) {
             self.parent = parent
@@ -99,26 +100,32 @@ struct ARViewContainer: UIViewRepresentable {
         }
         
         func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
-                guard let arView = renderer as? ARSCNView,
-                      let cameraTransform = arView.session.currentFrame?.camera.transform else { return }
+            guard let arView = renderer as? ARSCNView,
+                  let cameraTransform = arView.session.currentFrame?.camera.transform else { return }
 
+            let cameraPosition = SIMD3<Float>(cameraTransform.columns.3.x, cameraTransform.columns.3.y, cameraTransform.columns.3.z)
+
+            // Check if camera has moved significantly
+            if simd_distance(cameraPosition, lastCameraPosition) > 0.1 { // Adjust the threshold as needed
+                lastCameraPosition = cameraPosition
+                updateTileNodesFacingCamera(arView: arView, cameraPosition: cameraPosition)
+            }
+        }
+
+        private func updateTileNodesFacingCamera(arView: ARSCNView, cameraPosition: SIMD3<Float>) {
+            let relevantNodes = arView.scene.rootNode.childNodes.filter { $0.name?.starts(with: "infoTileNode-") == true }
+            
+            for node in relevantNodes {
+                let direction = SCNVector3(cameraPosition.x - node.position.x,
+                                           cameraPosition.y - node.position.y,
+                                           cameraPosition.z - node.position.z)
+                let rotation = SCNVector3(0, atan2(direction.x, direction.z), 0)
+                
                 DispatchQueue.main.async {
-                    self.updateTileNodesFacingCamera(arView: arView, cameraTransform: cameraTransform)
+                    node.eulerAngles = rotation
                 }
             }
-
-            private func updateTileNodesFacingCamera(arView: ARSCNView, cameraTransform: matrix_float4x4) {
-                let cameraPosition = SCNVector3(cameraTransform.columns.3.x, cameraTransform.columns.3.y, cameraTransform.columns.3.z)
-
-                arView.scene.rootNode.enumerateChildNodes { (node, _) in
-                    if node.name?.starts(with: "infoTileNode-") == true {
-                        let direction = SCNVector3(cameraPosition.x - node.position.x,
-                                                   cameraPosition.y - node.position.y,
-                                                   cameraPosition.z - node.position.z)
-                        node.eulerAngles = SCNVector3(0, atan2(direction.x, direction.z), 0)
-                    }
-                }
-            }
+        }
         
     }
     
