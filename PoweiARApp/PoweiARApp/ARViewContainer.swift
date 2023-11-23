@@ -37,6 +37,9 @@ struct ARViewContainer: UIViewRepresentable {
         // Add tap gesture recognizer
         let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap))
         arView.addGestureRecognizer(tapGesture)
+        
+        arView.delegate = context.coordinator
+
 
         return arView
     }
@@ -60,7 +63,7 @@ struct ARViewContainer: UIViewRepresentable {
         }
     }
     
-    class Coordinator {
+    class Coordinator: NSObject, ARSCNViewDelegate{
         var parent: ARViewContainer
 
         init(_ parent: ARViewContainer) {
@@ -94,7 +97,29 @@ struct ARViewContainer: UIViewRepresentable {
                 
             }
         }
+        
+        func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
+                guard let arView = renderer as? ARSCNView,
+                      let cameraTransform = arView.session.currentFrame?.camera.transform else { return }
 
+                DispatchQueue.main.async {
+                    self.updateTileNodesFacingCamera(arView: arView, cameraTransform: cameraTransform)
+                }
+            }
+
+            private func updateTileNodesFacingCamera(arView: ARSCNView, cameraTransform: matrix_float4x4) {
+                let cameraPosition = SCNVector3(cameraTransform.columns.3.x, cameraTransform.columns.3.y, cameraTransform.columns.3.z)
+
+                arView.scene.rootNode.enumerateChildNodes { (node, _) in
+                    if node.name?.starts(with: "infoTileNode-") == true {
+                        let direction = SCNVector3(cameraPosition.x - node.position.x,
+                                                   cameraPosition.y - node.position.y,
+                                                   cameraPosition.z - node.position.z)
+                        node.eulerAngles = SCNVector3(0, atan2(direction.x, direction.z), 0)
+                    }
+                }
+            }
+        
     }
     
     func makeCoordinator() -> Coordinator {
@@ -195,3 +220,5 @@ extension UIView {
         return hostingController.view
     }
 }
+
+
