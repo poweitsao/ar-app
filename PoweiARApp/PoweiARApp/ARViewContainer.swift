@@ -138,13 +138,13 @@ struct ARViewContainer: UIViewRepresentable {
 
 
 //        let uiView = UIView.from(swiftUIView: InfoTile(isExpanded: expandState.isExpanded).background(Color.clear).clipped(), width: fixedWidth)
-        let uiViewOne = UIView.from(swiftUIView: StationLabel(id: id).background(Color.clear).clipped(), width: fixedWidth)
+        let uiViewOne = UIView.from(swiftUIView: StationLabel(id: id, isExpanded: expandState.expandedStates[id] ?? false).background(Color.clear).clipped(), width: fixedWidth)
 
         // Use the passed height if available, otherwise calculate as before
         let tileHeight = uiViewOne.frame.height // Convert points to meters
         print("tileHeight:", tileHeight)
         
-        let uiViewTwo = UIView.from(swiftUIView: StationLabel(id: id).background(Color.clear).clipped(), height: tileHeight)
+        let uiViewTwo = UIView.from(swiftUIView: StationLabel(id: id, isExpanded: expandState.expandedStates[id] ?? false).background(Color.clear).clipped(), height: tileHeight)
         
         let tileWidth = uiViewTwo.frame.width // Convert points to meters
         print("tileWidth:", tileWidth)
@@ -163,7 +163,7 @@ struct ARViewContainer: UIViewRepresentable {
         let horizontalDistance: Float = 0.5 // meters
         
         let floatId = Float(id) ?? 0.0
-        let positionX = floatId * horizontalDistance
+        let positionX = floatId * horizontalDistance - 1
         
         let tileNode = SCNNode(geometry: plane)
         tileNode.name = "infoTileNode-\(id)" // Unique name for each tile node

@@ -28,7 +28,6 @@ struct InfoTile: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-                        
             // Station Title
             Text("Jay St-MetroTech Station")
                 .font(.title)
