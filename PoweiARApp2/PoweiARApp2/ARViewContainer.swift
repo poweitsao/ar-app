@@ -19,8 +19,10 @@ struct ARViewContainer: UIViewRepresentable {
         arView.addGestureRecognizer(tapGestureRecognizer)
 
         // Add the circle node
-        context.coordinator.addCircleNode(to: arView.scene.rootNode)
-
+        context.coordinator.addCircleNode(to: arView.scene.rootNode, withName: "circle", position: SCNVector3(x: -0.3, y: 0, z: -1))
+        context.coordinator.addCircleNode(to: arView.scene.rootNode, withName: "circle", position: SCNVector3(x: 0.3, y: 0, z: -1))
+        context.coordinator.addCircleNode(to: arView.scene.rootNode, withName: "circle", position: SCNVector3(x: 0.6, y: 0, z: -1))
+        context.coordinator.addCircleNode(to: arView.scene.rootNode, withName: "circle", position: SCNVector3(x: 0, y: 0, z: -1))
         return arView
     }
 
@@ -31,7 +33,7 @@ struct ARViewContainer: UIViewRepresentable {
     }
 
     class Coordinator: NSObject {
-        func addCircleNode(to rootNode: SCNNode) {            
+        func addCircleNode(to rootNode: SCNNode, withName name: String, position: SCNVector3) {
             snapshotView(width: 300, height: 200, CircleView()) { image in
                 // Main thread needed to update UI
                 DispatchQueue.main.async {
@@ -40,8 +42,8 @@ struct ARViewContainer: UIViewRepresentable {
                     node.geometry = SCNPlane(width: 0.3, height: 0.2) // Adjust size as needed
                     // Update the content of the node with the SwiftUI view snapshot
                     node.geometry?.firstMaterial?.diffuse.contents = image
-                    node.position = SCNVector3(x: 0, y: 0, z: -1)
-                    node.name = "circle"
+                    node.position = position
+                    node.name = name
                     
                     // Billboard constraint
                     let billboardConstraint = SCNBillboardConstraint()
@@ -85,7 +87,10 @@ struct ARViewContainer: UIViewRepresentable {
 
 
         func expandNode(_ node: SCNNode) {
-            if node.name == "circle" {
+            
+            if let nodeName = node.name, nodeName.hasPrefix("circle") {
+                // Extract the number after "circle"
+                let number = String(nodeName.dropFirst("circle".count))
                 // Expand to info tile
                 let width: Double = 400
                 let height: Double = 800
@@ -96,10 +101,14 @@ struct ARViewContainer: UIViewRepresentable {
                         node.geometry = SCNPlane(width: width/1000, height: height/1000) // Adjust size as needed
                         // Update the content of the node with the SwiftUI view snapshot
                         node.geometry?.firstMaterial?.diffuse.contents = image
-                        node.name = "infoTile"
+                        node.name = "infoTile" + number
                     }
                 }
-            } else if node.name == "infoTile" {
+
+            } else if let nodeName = node.name, nodeName.hasPrefix("infoTile") {
+                // Extract the number after "infoTile"
+                let number = String(nodeName.dropFirst("infoTile".count))
+                
                 // Collapse back to circle
                 let width: Double = 300
                 let height: Double = 200
@@ -110,8 +119,7 @@ struct ARViewContainer: UIViewRepresentable {
                         node.geometry = SCNPlane(width: width/1000, height: height/1000) // Adjust size as needed
                         // Update the content of the node with the SwiftUI view snapshot
                         node.geometry?.firstMaterial?.diffuse.contents = image
-                        node.position = SCNVector3(x: 0, y: 0, z: -1)
-                        node.name = "circle"
+                        node.name = "circle" + number
                     }
                 }
             }
