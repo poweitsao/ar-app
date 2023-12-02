@@ -31,36 +31,25 @@ struct ARViewContainer: UIViewRepresentable {
     }
 
     class Coordinator: NSObject {
-        func createCircularImage(diameter: CGFloat, color: UIColor) -> UIImage {
-            let size = CGSize(width: diameter, height: diameter)
-            let rect = CGRect(origin: .zero, size: size)
-
-            UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
-            let context = UIGraphicsGetCurrentContext()!
-            
-            context.setFillColor(color.cgColor)
-            context.fillEllipse(in: rect)
-
-            let image = UIGraphicsGetImageFromCurrentImageContext()!
-            UIGraphicsEndImageContext()
-
-            return image
-        }
-
-        func addCircleNode(to rootNode: SCNNode) {
-            let circleImage = createCircularImage(diameter: 100, color: .blue) // Adjust diameter as needed
-
-            let circleNode = SCNNode(geometry: SCNPlane(width: 0.1, height: 0.1)) // 10cm x 10cm plane
-            circleNode.geometry?.firstMaterial?.diffuse.contents = circleImage
-            circleNode.position = SCNVector3(x: 0, y: 0, z: -0.5) // 50cm in front of the camera
-            circleNode.name = "circle" // Set name to identify the node
-            
-            // Billboard constraint
-            let billboardConstraint = SCNBillboardConstraint()
-            billboardConstraint.freeAxes = .all
-            circleNode.constraints = [billboardConstraint]
-
-            rootNode.addChildNode(circleNode)
+        func addCircleNode(to rootNode: SCNNode) {            
+            snapshotView(width: 300, height: 200, CircleView()) { image in
+                // Main thread needed to update UI
+                DispatchQueue.main.async {
+                    let node = SCNNode(geometry: SCNPlane(width: 0.2, height: 0.1))
+                    // Change the geometry to represent an info tile
+                    node.geometry = SCNPlane(width: 0.3, height: 0.2) // Adjust size as needed
+                    // Update the content of the node with the SwiftUI view snapshot
+                    node.geometry?.firstMaterial?.diffuse.contents = image
+                    node.position = SCNVector3(x: 0, y: 0, z: -1)
+                    node.name = "circle"
+                    
+                    // Billboard constraint
+                    let billboardConstraint = SCNBillboardConstraint()
+                    billboardConstraint.freeAxes = .all
+                    node.constraints = [billboardConstraint]
+                    rootNode.addChildNode(node)
+                }
+            }
         }
 
         @objc func handleTap(_ recognizer: UITapGestureRecognizer) {
@@ -75,11 +64,11 @@ struct ARViewContainer: UIViewRepresentable {
             }
         }
         
-        func snapshotView<T: View>(_ view: T, completion: @escaping (UIImage) -> Void) {
+        func snapshotView<T: View>(width: Double, height: Double, _ view: T, completion: @escaping (UIImage) -> Void) {
             let controller = UIHostingController(rootView: view)
             let view = controller.view
 
-            let targetSize = CGSize(width: 300, height: 200) // Adjust size as needed
+            let targetSize = CGSize(width: width, height: height) // Adjust size as needed
             view?.bounds = CGRect(origin: .zero, size: targetSize)
             view?.backgroundColor = .clear
 
@@ -98,11 +87,13 @@ struct ARViewContainer: UIViewRepresentable {
         func expandNode(_ node: SCNNode) {
             if node.name == "circle" {
                 // Expand to info tile
-                snapshotView(InfoTileView()) { image in
+                let width: Double = 400
+                let height: Double = 800
+                snapshotView(width: width, height: height, InfoTileView()) { image in
                     // Main thread needed to update UI
                     DispatchQueue.main.async {
                         // Change the geometry to represent an info tile
-                        node.geometry = SCNPlane(width: 0.3, height: 0.2) // Adjust size as needed
+                        node.geometry = SCNPlane(width: width/1000, height: height/1000) // Adjust size as needed
                         // Update the content of the node with the SwiftUI view snapshot
                         node.geometry?.firstMaterial?.diffuse.contents = image
                         node.name = "infoTile"
@@ -110,9 +101,19 @@ struct ARViewContainer: UIViewRepresentable {
                 }
             } else if node.name == "infoTile" {
                 // Collapse back to circle
-                node.geometry = SCNPlane(width: 0.1, height: 0.1)
-                node.geometry?.firstMaterial?.diffuse.contents = createCircularImage(diameter: 100, color: .blue)
-                node.name = "circle"
+                let width: Double = 300
+                let height: Double = 200
+                snapshotView(width: width, height: height, CircleView()) { image in
+                    // Main thread needed to update UI
+                    DispatchQueue.main.async {
+                        // Change the geometry to represent an info tile
+                        node.geometry = SCNPlane(width: width/1000, height: height/1000) // Adjust size as needed
+                        // Update the content of the node with the SwiftUI view snapshot
+                        node.geometry?.firstMaterial?.diffuse.contents = image
+                        node.position = SCNVector3(x: 0, y: 0, z: -1)
+                        node.name = "circle"
+                    }
+                }
             }
             
             let billboardConstraint = SCNBillboardConstraint()
