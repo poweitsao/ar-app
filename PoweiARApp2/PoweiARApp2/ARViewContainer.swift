@@ -54,6 +54,12 @@ struct ARViewContainer: UIViewRepresentable {
             circleNode.geometry?.firstMaterial?.diffuse.contents = circleImage
             circleNode.position = SCNVector3(x: 0, y: 0, z: -0.5) // 50cm in front of the camera
             circleNode.name = "circle" // Set name to identify the node
+            
+            // Billboard constraint
+            let billboardConstraint = SCNBillboardConstraint()
+            billboardConstraint.freeAxes = .all
+            circleNode.constraints = [billboardConstraint]
+
             rootNode.addChildNode(circleNode)
         }
 
@@ -108,6 +114,10 @@ struct ARViewContainer: UIViewRepresentable {
                 node.geometry?.firstMaterial?.diffuse.contents = createCircularImage(diameter: 100, color: .blue)
                 node.name = "circle"
             }
+            
+            let billboardConstraint = SCNBillboardConstraint()
+                billboardConstraint.freeAxes = .all
+                node.constraints = [billboardConstraint]
         }
 
     }
