@@ -17,6 +17,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		B8489A212B1C4A5000EC49EC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		B89358932B1A774C00CD8EAB /* PoweiARApp2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PoweiARApp2.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B89358962B1A774C00CD8EAB /* PoweiARApp2App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoweiARApp2App.swift; sourceTree = "<group>"; };
 		B89358982B1A774C00CD8EAB /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -57,6 +58,7 @@
 		B89358952B1A774C00CD8EAB /* PoweiARApp2 */ = {
 			isa = PBXGroup;
 			children = (
+				B8489A212B1C4A5000EC49EC /* Info.plist */,
 				B89358962B1A774C00CD8EAB /* PoweiARApp2App.swift */,
 				B89358982B1A774C00CD8EAB /* ContentView.swift */,
 				B893589A2B1A774D00CD8EAB /* Assets.xcassets */,
@@ -287,7 +289,11 @@
 				DEVELOPMENT_TEAM = JD7CGLK465;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PoweiARApp2/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSCameraUsageDescription = "lemme use";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Need location";
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "gimme location";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -317,7 +323,11 @@
 				DEVELOPMENT_TEAM = JD7CGLK465;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PoweiARApp2/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSCameraUsageDescription = "lemme use";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Need location";
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "gimme location";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
