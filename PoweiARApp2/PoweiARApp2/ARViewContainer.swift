@@ -28,7 +28,7 @@ struct ARViewContainer: UIViewRepresentable {
 
         // Add the circle node
         context.coordinator.addCircleNode(to: arView.scene.rootNode, withName: "circle1", latitude: 40.285606, longitude: -74.679997) // south ish
-//        context.coordinator.addCircleNode(to: arView.scene.rootNode, withName: "circle2", latitude: 40.288528, longitude: -74.678673) //North ish 40.288528, -74.678673
+        context.coordinator.addCircleNode(to: arView.scene.rootNode, withName: "circle2", latitude: 40.288528, longitude: -74.678673) //North ish 40.288528, -74.678673
 //        context.coordinator.addCircleNode(to: arView.scene.rootNode, withName: "circle", position: SCNVector3(x: 0.6, y: 0, z: -1))
 //        context.coordinator.addCircleNode(to: arView.scene.rootNode, withName: "circle", position: SCNVector3(x: 0, y: 0, z: -1))
         arViewReference.arView = arView
@@ -47,7 +47,9 @@ struct ARViewContainer: UIViewRepresentable {
         var motionManager = CMMotionManager()
         var locationManager = CLLocationManager()
         var userLocation = CLLocation()
-        var targetLocation: CLLocation?
+//        var targetLocation: CLLocation?
+        
+        var nodeTargetLocations: [String: CLLocation] = [:]
         
         init(arViewReference: ARViewReference) {
             self.arViewReference = arViewReference
@@ -69,14 +71,35 @@ struct ARViewContainer: UIViewRepresentable {
             if let location = locations.last {
                 userLocation = location
                 // If targetLocation is set, update the position of the node
-                if targetLocation != nil {
-                    updateNodePosition()
-                }
+                updateNodePosition()
             }
         }
         
         func clamp(_ value: Float, min: Float, max: Float) -> Float {
             return value < min ? min : (value > max ? max : value)
+        }
+        
+        func splitNodeName(_ nodeName: String) -> (prefix: String, number: String)? {
+            // Regular expression pattern to match the prefix and the number
+            let pattern = "^(circle|infoTile)(\\d+)$"
+
+            // Attempt to create a regular expression
+            guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
+                return nil
+            }
+
+            // Perform the search
+            let nsString = nodeName as NSString
+            let matches = regex.matches(in: nodeName, options: [], range: NSRange(location: 0, length: nsString.length))
+
+            // Extract and return the prefix and number if found
+            if let match = matches.first, match.numberOfRanges == 3 {
+                let prefix = nsString.substring(with: match.range(at: 1))
+                let number = nsString.substring(with: match.range(at: 2))
+                return (prefix, number)
+            }
+
+            return nil
         }
         
         func roundToTwoDecimalPlaces(value: Float) -> Float {
@@ -104,36 +127,40 @@ struct ARViewContainer: UIViewRepresentable {
         }
         
         func updateNodePosition() {
-            guard let targetLocation = targetLocation, let arView = arViewReference.arView else { return }
+            guard let arView = arViewReference.arView else { return }
 
             let userPosition = arView.pointOfView?.position ?? SCNVector3(0, 0, 0)
 
-            let distance = userLocation.distance(from: targetLocation)
-            if distance < 10 {
-                // Logic to pin the node in 3D space around the user
-            } else {
-                // Iterate through all nodes with names starting with "circle" or "infoTile"
-                arView.scene.rootNode.enumerateChildNodes { (node, _) in
-                    if let nodeName = node.name, nodeName.hasPrefix("circle") || nodeName.hasPrefix("infoTile") {
-                        print("nodeName", nodeName)
-                        // Update position for each circle or infoTile node
-                        let newLocalPosition = adjustNodePositionToTarget(targetLongitude: targetLocation.coordinate.longitude, targetLatitude: targetLocation.coordinate.latitude, targetDistance: 2.0, userPosition: userPosition)
-                        print(nodeName, "position:", newLocalPosition, "targetLocation", targetLocation)
-                        node.position = newLocalPosition
+            // Iterate through all nodes
+            arView.scene.rootNode.enumerateChildNodes { (node, _) in
+                if let nodeName = node.name, nodeName.hasPrefix("circle") || nodeName.hasPrefix("infoTile"),
+                   let result = splitNodeName(nodeName) {
+                    let number = result.number
+                    
+                    if let targetLocation = nodeTargetLocations[number] {
+                        let distance = userLocation.distance(from: targetLocation)
+                        if distance < 10 {
+                            // Logic to pin the node in 3D space around the user
+                        } else {
+                            // Here, use the specific target location for this node
+                            let newLocalPosition = adjustNodePositionToTarget(targetLongitude: targetLocation.coordinate.longitude, targetLatitude: targetLocation.coordinate.latitude, targetDistance: 2.0, userPosition: userPosition)
+                            node.position = newLocalPosition
+                        }
                     }
                 }
             }
         }
+
         
         func convertGPSToAR(latitude: Double, longitude: Double) -> SCNVector3 {
 //            print("userLocation", userLocation)
-            targetLocation = CLLocation(latitude: latitude, longitude: longitude)
+            let targetLocation = CLLocation(latitude: latitude, longitude: longitude)
 
             // Calculate distance
-            let distance = userLocation.distance(from: targetLocation!)
+            let distance = userLocation.distance(from: targetLocation)
 
             // Calculate bearing
-            let bearing = bearingToLocationRadian(userLocation, targetLocation: targetLocation!)
+            let bearing = bearingToLocationRadian(userLocation, targetLocation: targetLocation)
 
             // Convert bearing and distance to x and z coordinates
             let z = -Float(distance * cos(bearing)) // Forward/backward axis
@@ -162,7 +189,14 @@ struct ARViewContainer: UIViewRepresentable {
         
         func addCircleNode(to rootNode: SCNNode, withName name: String, latitude: Double, longitude: Double) {
             let localPosition = convertGPSToAR(latitude: latitude, longitude: longitude)
-//            print("localPosition", localPosition)
+            let targetLocation = CLLocation(latitude: latitude, longitude: longitude)
+            
+            // Store the target location in the dictionary
+            if let result = splitNodeName(name) {
+                let prefix = result.prefix
+                let number = result.number
+                nodeTargetLocations[number] = targetLocation
+            }
             
             snapshotView(width: 300, height: 200, CircleView()) { image in
                 // Main thread needed to update UI
