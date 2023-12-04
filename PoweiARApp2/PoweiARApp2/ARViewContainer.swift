@@ -8,6 +8,7 @@ import SwiftUI
 import ARKit
 import SceneKit
 import CoreLocation
+import CoreMotion
 
 class ARViewReference {
     var arView: ARSCNView?
@@ -26,8 +27,8 @@ struct ARViewContainer: UIViewRepresentable {
         arView.addGestureRecognizer(tapGestureRecognizer)
 
         // Add the circle node
-        context.coordinator.addCircleNode(to: arView.scene.rootNode, withName: "circle", latitude: 40.285538, longitude: -74.677366)
-//        context.coordinator.addCircleNode(to: arView.scene.rootNode, withName: "circle", position: SCNVector3(x: 0.3, y: 0, z: -1))
+        context.coordinator.addCircleNode(to: arView.scene.rootNode, withName: "circle1", latitude: 40.285606, longitude: -74.679997) // south ish
+//        context.coordinator.addCircleNode(to: arView.scene.rootNode, withName: "circle2", latitude: 40.288528, longitude: -74.678673) //North ish 40.288528, -74.678673
 //        context.coordinator.addCircleNode(to: arView.scene.rootNode, withName: "circle", position: SCNVector3(x: 0.6, y: 0, z: -1))
 //        context.coordinator.addCircleNode(to: arView.scene.rootNode, withName: "circle", position: SCNVector3(x: 0, y: 0, z: -1))
         arViewReference.arView = arView
@@ -43,6 +44,7 @@ struct ARViewContainer: UIViewRepresentable {
     class Coordinator: NSObject, CLLocationManagerDelegate {
         var arViewReference: ARViewReference
         
+        var motionManager = CMMotionManager()
         var locationManager = CLLocationManager()
         var userLocation = CLLocation()
         var targetLocation: CLLocation?
@@ -54,6 +56,12 @@ struct ARViewContainer: UIViewRepresentable {
             locationManager.desiredAccuracy = kCLLocationAccuracyBest
             locationManager.requestWhenInUseAuthorization()
             locationManager.startUpdatingLocation()
+            locationManager.startUpdatingHeading()
+            // Start motion updates
+            if motionManager.isDeviceMotionAvailable {
+                motionManager.deviceMotionUpdateInterval = 0.1
+                motionManager.startDeviceMotionUpdates(using: .xTrueNorthZVertical)
+            }
         }
         
         // CLLocationManagerDelegate methods
@@ -71,51 +79,69 @@ struct ARViewContainer: UIViewRepresentable {
             return value < min ? min : (value > max ? max : value)
         }
         
+        func roundToTwoDecimalPlaces(value: Float) -> Float {
+            return (value * 100).rounded() / 100
+        }
+        
+        func adjustNodePositionToTarget(targetLongitude: Double, targetLatitude: Double, targetDistance: Double, userPosition: SCNVector3) -> SCNVector3 {
+            // Convert target longitude and latitude to AR scene coordinates
+            let targetPosition = convertGPSToAR(latitude: targetLatitude, longitude: targetLongitude)
+
+            // Calculate the direction vector from the user to the target on the XZ plane
+            var direction = SCNVector3(targetPosition.x - userPosition.x, 0, targetPosition.z - userPosition.z)
+            
+            // Normalize the direction vector
+            let length = roundToTwoDecimalPlaces(value: sqrt(direction.x * direction.x + direction.z * direction.z))
+            direction = SCNVector3(direction.x / length, 0, direction.z / length)
+            
+            // Scale the direction vector to the target distance
+            let scaledDirection = SCNVector3(direction.x * Float(targetDistance), 0, direction.z * Float(targetDistance))
+            
+            // Calculate the new node position with the same Y value as the user's position
+            let newNodePosition = SCNVector3(userPosition.x + scaledDirection.x, userPosition.y, userPosition.z + scaledDirection.z)
+
+            return newNodePosition
+        }
+        
         func updateNodePosition() {
             guard let targetLocation = targetLocation, let arView = arViewReference.arView else { return }
+
+            let userPosition = arView.pointOfView?.position ?? SCNVector3(0, 0, 0)
 
             let distance = userLocation.distance(from: targetLocation)
             if distance < 10 {
                 // Logic to pin the node in 3D space around the user
             } else {
-                // Recalculate the node's position as the user moves
-                var newLocalPosition = convertGPSToAR(latitude: targetLocation.coordinate.latitude, longitude: targetLocation.coordinate.longitude)
-                newLocalPosition.z = clamp(newLocalPosition.z, min: -1, max: 1)
-                newLocalPosition.x = clamp(newLocalPosition.x, min: -1, max: 1)
-                print("newLocalPosition", newLocalPosition)
-                // Update the position of the node
-                if let node = arView.scene.rootNode.childNode(withName: "circle", recursively: true) {
-                    node.position = newLocalPosition
+                // Iterate through all nodes with names starting with "circle" or "infoTile"
+                arView.scene.rootNode.enumerateChildNodes { (node, _) in
+                    if let nodeName = node.name, nodeName.hasPrefix("circle") || nodeName.hasPrefix("infoTile") {
+                        print("nodeName", nodeName)
+                        // Update position for each circle or infoTile node
+                        let newLocalPosition = adjustNodePositionToTarget(targetLongitude: targetLocation.coordinate.longitude, targetLatitude: targetLocation.coordinate.latitude, targetDistance: 2.0, userPosition: userPosition)
+                        print(nodeName, "position:", newLocalPosition, "targetLocation", targetLocation)
+                        node.position = newLocalPosition
+                    }
                 }
             }
         }
         
-        func convertGPSToAR(latitude: Double, longitude: Double) -> SCNVector3 { // WIP, not using user's heading to put the marker at the right spatial place, but icon shows up
-            targetLocation = CLLocation(latitude: latitude, longitude: longitude)
-            // Initial basic conversion, you may need to refine this for accuracy
-            print("userLocation", userLocation)
-            let distance = userLocation.distance(from: targetLocation!)
-            // Convert distance to an SCNVector3. This example assumes directly ahead, adjust as needed.
-            return SCNVector3(0, 0, -Float(distance))
-        }
-        
-//        func convertGPSToAR(latitude: Double, longitude: Double) -> SCNVector3 {
+        func convertGPSToAR(latitude: Double, longitude: Double) -> SCNVector3 {
 //            print("userLocation", userLocation)
-//            let targetLocation = CLLocation(latitude: latitude, longitude: longitude)
-//
-//            // Calculate distance
-//            let distance = userLocation.distance(from: targetLocation)
-//
-//            // Calculate bearing
-//            let bearing = bearingToLocationRadian(userLocation, targetLocation: targetLocation)
-//
-//            // Convert bearing and distance to x and z coordinates
-//            let z = -Float(distance * cos(bearing)) // Forward/backward axis
-//            let x = Float(distance * sin(bearing))  // Left/right axis
-//
-//            // Return SCNVector3
-//            return SCNVector3(x, 0, z) // Assuming y-axis (vertical) is not affected
-//        }
+            targetLocation = CLLocation(latitude: latitude, longitude: longitude)
+
+            // Calculate distance
+            let distance = userLocation.distance(from: targetLocation!)
+
+            // Calculate bearing
+            let bearing = bearingToLocationRadian(userLocation, targetLocation: targetLocation!)
+
+            // Convert bearing and distance to x and z coordinates
+            let z = -Float(distance * cos(bearing)) // Forward/backward axis
+            let x = Float(distance * sin(bearing))  // Left/right axis
+
+            // Return SCNVector3
+            return SCNVector3(x, 0, z) // Assuming y-axis (vertical) is not affected
+        }
 
         // Helper function to compute bearing
         func bearingToLocationRadian(_ userLocation: CLLocation, targetLocation: CLLocation) -> Double {
@@ -136,7 +162,7 @@ struct ARViewContainer: UIViewRepresentable {
         
         func addCircleNode(to rootNode: SCNNode, withName name: String, latitude: Double, longitude: Double) {
             let localPosition = convertGPSToAR(latitude: latitude, longitude: longitude)
-            print("localPosition", localPosition)
+//            print("localPosition", localPosition)
             
             snapshotView(width: 300, height: 200, CircleView()) { image in
                 // Main thread needed to update UI
