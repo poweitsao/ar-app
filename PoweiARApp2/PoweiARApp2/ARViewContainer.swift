@@ -27,8 +27,8 @@ struct ARViewContainer: UIViewRepresentable {
         arView.addGestureRecognizer(tapGestureRecognizer)
 
         // Add the circle node
-        context.coordinator.addCircleNode(to: arView.scene.rootNode, withName: "circle1", latitude: 40.285606, longitude: -74.679997) // south ish
-        context.coordinator.addCircleNode(to: arView.scene.rootNode, withName: "circle2", latitude: 40.288528, longitude: -74.678673) //North ish 40.288528, -74.678673
+        context.coordinator.addCircleNode(to: arView.scene.rootNode, withName: "circle1", latitude: 40.7428975, longitude: -73.9930865) // south ish
+//        context.coordinator.addCircleNode(to: arView.scene.rootNode, withName: "circle2", latitude: 40.288528, longitude: -74.678673) //North ish 40.288528, -74.678673
 //        context.coordinator.addCircleNode(to: arView.scene.rootNode, withName: "circle", position: SCNVector3(x: 0.6, y: 0, z: -1))
 //        context.coordinator.addCircleNode(to: arView.scene.rootNode, withName: "circle", position: SCNVector3(x: 0, y: 0, z: -1))
         arViewReference.arView = arView
@@ -138,14 +138,14 @@ struct ARViewContainer: UIViewRepresentable {
                     let number = result.number
                     
                     if let targetLocation = nodeTargetLocations[number] {
-                        let distance = userLocation.distance(from: targetLocation)
-                        if distance < 10 {
-                            // Logic to pin the node in 3D space around the user
-                        } else {
+//                        let distance = userLocation.distance(from: targetLocation)
+//                        if distance < 10 {
+//                            // Logic to pin the node in 3D space around the user
+//                        } else {
                             // Here, use the specific target location for this node
-                            let newLocalPosition = adjustNodePositionToTarget(targetLongitude: targetLocation.coordinate.longitude, targetLatitude: targetLocation.coordinate.latitude, targetDistance: 2.0, userPosition: userPosition)
+                            let newLocalPosition = adjustNodePositionToTarget(targetLongitude: targetLocation.coordinate.longitude, targetLatitude: targetLocation.coordinate.latitude, targetDistance: 1.0, userPosition: userPosition)
                             node.position = newLocalPosition
-                        }
+                        
                     }
                 }
             }
@@ -198,7 +198,7 @@ struct ARViewContainer: UIViewRepresentable {
                 nodeTargetLocations[number] = targetLocation
             }
             
-            snapshotView(width: 300, height: 200, CircleView()) { image in
+            snapshotView(width: 300, height: 200, CircleView(labelText: "Downtown/Uptown")) { image in
                 // Main thread needed to update UI
                 DispatchQueue.main.async {
                     let node = SCNNode(geometry: SCNPlane(width: 0.2, height: 0.1))
@@ -256,9 +256,9 @@ struct ARViewContainer: UIViewRepresentable {
                 // Extract the number after "circle"
                 let number = String(nodeName.dropFirst("circle".count))
                 // Expand to info tile
-                let width: Double = 400
-                let height: Double = 800
-                snapshotView(width: width, height: height, InfoTileView()) { image in
+                let width: Double = 450
+                let height: Double = 300
+                snapshotView(width: width, height: height, InfoTileDowntown()) { image in
                     // Main thread needed to update UI
                     DispatchQueue.main.async {
                         // Change the geometry to represent an info tile
@@ -276,7 +276,7 @@ struct ARViewContainer: UIViewRepresentable {
                 // Collapse back to circle
                 let width: Double = 300
                 let height: Double = 200
-                snapshotView(width: width, height: height, CircleView()) { image in
+                snapshotView(width: width, height: height, CircleView(labelText: "circle" + number)) { image in
                     // Main thread needed to update UI
                     DispatchQueue.main.async {
                         // Change the geometry to represent an info tile

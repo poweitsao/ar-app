@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B83C2E5A2B202653007D4F29 /* InfoTileDowntown.swift in Sources */ = {isa = PBXBuildFile; fileRef = B83C2E592B202653007D4F29 /* InfoTileDowntown.swift */; };
 		B89358972B1A774C00CD8EAB /* PoweiARApp2App.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89358962B1A774C00CD8EAB /* PoweiARApp2App.swift */; };
 		B89358992B1A774C00CD8EAB /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89358982B1A774C00CD8EAB /* ContentView.swift */; };
 		B893589B2B1A774D00CD8EAB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B893589A2B1A774D00CD8EAB /* Assets.xcassets */; };
@@ -17,6 +18,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		B83C2E592B202653007D4F29 /* InfoTileDowntown.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoTileDowntown.swift; sourceTree = "<group>"; };
 		B8489A212B1C4A5000EC49EC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		B89358932B1A774C00CD8EAB /* PoweiARApp2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PoweiARApp2.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B89358962B1A774C00CD8EAB /* PoweiARApp2App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoweiARApp2App.swift; sourceTree = "<group>"; };
@@ -66,6 +68,7 @@
 				B89358A42B1A77BF00CD8EAB /* ARViewContainer.swift */,
 				B89358A62B1A788800CD8EAB /* CircleView.swift */,
 				B89358A82B1A78A900CD8EAB /* InfoTileView.swift */,
+				B83C2E592B202653007D4F29 /* InfoTileDowntown.swift */,
 			);
 			path = PoweiARApp2;
 			sourceTree = "<group>";
@@ -149,6 +152,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B89358A92B1A78A900CD8EAB /* InfoTileView.swift in Sources */,
+				B83C2E5A2B202653007D4F29 /* InfoTileDowntown.swift in Sources */,
 				B89358A72B1A788800CD8EAB /* CircleView.swift in Sources */,
 				B89358992B1A774C00CD8EAB /* ContentView.swift in Sources */,
 				B89358972B1A774C00CD8EAB /* PoweiARApp2App.swift in Sources */,
